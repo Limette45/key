@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Symbol Typing Practice</title>
+<title>Typing Practice</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']]
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <style>
 * {
   box-sizing: border-box;
@@ -17,12 +29,35 @@ body {
   text-align: center;
 }
 main {
-  max-width: 480px;
+  max-width: 600px;
   margin: 0 auto;
 }
 h1 {
-  font-size: 24px;
-  margin-bottom: 28px;
+  font-size: 25px;
+  margin: 0 0 24px;
+}
+.modes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #333;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+.modes button {
+  flex: 1;
+  background: #ddd;
+  color: #333;
+}
+.modes button.active {
+  background: #3478f6;
+  color: white;
 }
 #target {
   display: flex;
@@ -30,24 +65,38 @@ h1 {
   justify-content: center;
   min-height: 180px;
   margin: 20px 0;
+  padding: 20px;
   border-radius: 16px;
   background: white;
   font-family: Consolas, monospace;
-  font-size: 76px;
+  font-size: 68px;
   font-weight: bold;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
-input {
+#target.practical {
+  min-height: 150px;
+  font-size: 25px;
+  font-weight: normal;
+}
+#target.math {
+  font-family: Arial, sans-serif;
+  font-size: 30px;
+}
+#answer {
   width: 100%;
   padding: 16px;
   border: 2px solid #bbb;
   border-radius: 10px;
   font-family: Consolas, monospace;
-  font-size: 28px;
-  text-align: center;
+  font-size: 19px;
+  text-align: left;
   outline: none;
+  background: white;
+  color: #222;
 }
-input:focus {
+#answer:focus {
   border-color: #3478f6;
 }
 #status {
@@ -55,24 +104,80 @@ input:focus {
   color: #555;
   font-size: 15px;
 }
-button {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 9px;
-  background: #333;
-  color: white;
+#hint {
+  margin: 14px 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+#hintTitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+#example {
+  font-family: Consolas, monospace;
   font-size: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+#restart {
+  margin-top: 4px;
+}
+.hidden {
+  display: none !important;
+}
+@media (max-width: 420px) {
+  body {
+    padding: 20px 12px;
+  }
+  #target {
+    font-size: 54px;
+    min-height: 150px;
+  }
+  #target.practical {
+    font-size: 21px;
+  }
+  #target.math {
+    font-size: 25px;
+  }
+  #answer {
+    font-size: 16px;
+  }
 }
 </style>
 </head>
 <body>
 <main>
-  <h1>Symbol Typing Practice</h1>
+  <h1>Typing Practice</h1>
+
+  <div class="modes">
+    <button id="symbolMode" class="active">Symbol Mode</button>
+    <button id="practicalMode">Practical Mode</button>
+  </div>
+
   <div id="target"></div>
-  <input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the symbol">
+
+  <div id="hint" class="hidden">
+    <div id="hintTitle">Input Example (Answer)</div>
+    <div id="example"></div>
+  </div>
+
+  <input
+    id="answer"
+    type="text"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+    placeholder="Type your answer"
+  >
+
   <div id="status"></div>
   <button id="restart">Restart</button>
 </main>
+
 <script>
 const symbols = [
   "=", ";", ":", ",", ".", "'", "\"",
@@ -81,14 +186,82 @@ const symbols = [
   "!", "?", "_", "#"
 ];
 
+const practical = [
+  {
+    type: "c",
+    display: "#include <stdio.h>",
+    answer: "#include <stdio.h>"
+  },
+  {
+    type: "c",
+    display: 'printf("Hello, world!\\n");',
+    answer: 'printf("Hello, world!\\n");'
+  },
+  {
+    type: "c",
+    display: "if (x > 0) { }",
+    answer: "if (x > 0) { }"
+  },
+  {
+    type: "c",
+    display: "for (int i = 0; i < n; i++) { }",
+    answer: "for (int i = 0; i < n; i++) { }"
+  },
+  {
+    type: "c",
+    display: "int arr[2] = {10, 20};",
+    answer: "int arr[2] = {10, 20};"
+  },
+  {
+    type: "c",
+    display: "scanf(\"%d\", &x);",
+    answer: "scanf(\"%d\", &x);"
+  },
+  {
+    type: "math",
+    display: "\\frac{a}{b}",
+    answer: "\\frac{a}{b}"
+  },
+  {
+    type: "math",
+    display: "\\sqrt{x^2+y^2}",
+    answer: "\\sqrt{x^2+y^2}"
+  },
+  {
+    type: "math",
+    display: "\\int_0^1 x^2\\,dx",
+    answer: "\\int_0^1 x^2\\,dx"
+  },
+  {
+    type: "math",
+    display: "\\sum_{i=1}^{n} i",
+    answer: "\\sum_{i=1}^{n} i"
+  },
+  {
+    type: "math",
+    display: "\\lim_{x\\to 0}\\frac{\\sin x}{x}",
+    answer: "\\lim_{x\\to 0}\\frac{\\sin x}{x}"
+  },
+  {
+    type: "math",
+    display: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}",
+    answer: "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}"
+  }
+];
+
+let mode = "symbol";
 let deck = [];
 let index = 0;
 let completed = 0;
+let totalCompleted = 0;
 
 const target = document.getElementById("target");
 const answer = document.getElementById("answer");
 const status = document.getElementById("status");
-const restart = document.getElementById("restart");
+const hint = document.getElementById("hint");
+const example = document.getElementById("example");
+const symbolMode = document.getElementById("symbolMode");
+const practicalMode = document.getElementById("practicalMode");
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -99,39 +272,89 @@ function shuffle(array) {
 }
 
 function start() {
-  deck = shuffle([...symbols]);
+  deck = shuffle(
+    mode === "symbol" ? [...symbols] : [...practical]
+  );
   index = 0;
   completed = 0;
+  answer.value = "";
+  answer.disabled = false;
   showNext();
 }
 
 function showNext() {
   if (index >= deck.length) {
-    target.textContent = "✓";
-    status.textContent = "Completed! " + completed + " / " + symbols.length;
-    answer.value = "";
-    answer.disabled = true;
-    return;
+    deck = shuffle(
+      mode === "symbol" ? [...symbols] : [...practical]
+    );
+    index = 0;
   }
 
-  target.textContent = deck[index];
+  const item = deck[index];
+
   answer.value = "";
-  status.textContent = "Progress: " + completed + " / " + symbols.length;
+
+  if (mode === "symbol") {
+    target.className = "";
+    target.textContent = item;
+    hint.classList.add("hidden");
+    answer.placeholder = "Type the symbol";
+  } else if (item.type === "c") {
+    target.className = "practical";
+    target.textContent = item.display;
+    hint.classList.remove("hidden");
+    example.textContent = item.answer;
+    answer.placeholder = "Type the code";
+  } else {
+    target.className = "math";
+    target.innerHTML = "\\[" + item.display + "\\]";
+    hint.classList.remove("hidden");
+    example.textContent = item.answer;
+    answer.placeholder = "Type the LaTeX source";
+
+    if (window.MathJax && MathJax.typesetPromise) {
+      MathJax.typesetPromise([target]).catch(() => {});
+    }
+  }
+
+  status.textContent =
+    "Progress: " + completed + " / " + deck.length +
+    " | Total completed: " + totalCompleted;
+
   answer.focus();
 }
 
+function setMode(newMode) {
+  mode = newMode;
+
+  symbolMode.classList.toggle("active", mode === "symbol");
+  practicalMode.classList.toggle("active", mode === "practical");
+
+  start();
+}
+
 answer.addEventListener("input", () => {
-  if (answer.value === deck[index]) {
+  if (answer.value === deck[index].answer && mode === "practical") {
     completed++;
+    totalCompleted++;
     index++;
     showNext();
-  } else if (answer.value.length >= deck[index].length) {
-    answer.value = "";
+    return;
+  }
+
+  if (mode === "symbol" && answer.value === deck[index]) {
+    completed++;
+    totalCompleted++;
+    index++;
+    showNext();
   }
 });
 
-restart.addEventListener("click", () => {
-  answer.disabled = false;
+symbolMode.addEventListener("click", () => setMode("symbol"));
+practicalMode.addEventListener("click", () => setMode("practical"));
+
+document.getElementById("restart").addEventListener("click", () => {
+  totalCompleted = 0;
   start();
 });
 
