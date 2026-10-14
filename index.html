@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symbol Typing Practice</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 24px 16px;
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  color: #222;
+  text-align: center;
+}
+main {
+  max-width: 480px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 24px;
+  margin-bottom: 28px;
+}
+#target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  margin: 20px 0;
+  border-radius: 16px;
+  background: white;
+  font-family: Consolas, monospace;
+  font-size: 76px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+input {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #bbb;
+  border-radius: 10px;
+  font-family: Consolas, monospace;
+  font-size: 28px;
+  text-align: center;
+  outline: none;
+}
+input:focus {
+  border-color: #3478f6;
+}
+#status {
+  margin: 18px 0;
+  color: #555;
+  font-size: 15px;
+}
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 9px;
+  background: #333;
+  color: white;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Symbol Typing Practice</h1>
+  <div id="target"></div>
+  <input id="answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the symbol">
+  <div id="status"></div>
+  <button id="restart">Restart</button>
+</main>
+<script>
+const symbols = [
+  "=", ";", ":", ",", ".", "'", "\"",
+  "()", "[]", "{}", "+", "-", "*", "/",
+  "\\", "%", "^", "<", ">", "&", "|",
+  "!", "?", "_", "#"
+];
+
+let deck = [];
+let index = 0;
+let completed = 0;
+
+const target = document.getElementById("target");
+const answer = document.getElementById("answer");
+const status = document.getElementById("status");
+const restart = document.getElementById("restart");
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function start() {
+  deck = shuffle([...symbols]);
+  index = 0;
+  completed = 0;
+  showNext();
+}
+
+function showNext() {
+  if (index >= deck.length) {
+    target.textContent = "✓";
+    status.textContent = "Completed! " + completed + " / " + symbols.length;
+    answer.value = "";
+    answer.disabled = true;
+    return;
+  }
+
+  target.textContent = deck[index];
+  answer.value = "";
+  status.textContent = "Progress: " + completed + " / " + symbols.length;
+  answer.focus();
+}
+
+answer.addEventListener("input", () => {
+  if (answer.value === deck[index]) {
+    completed++;
+    index++;
+    showNext();
+  } else if (answer.value.length >= deck[index].length) {
+    answer.value = "";
+  }
+});
+
+restart.addEventListener("click", () => {
+  answer.disabled = false;
+  start();
+});
+
+start();
+</script>
+</body>
+</html>
