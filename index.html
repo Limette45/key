@@ -291,7 +291,6 @@ function showNext() {
   }
 
   const item = deck[index];
-
   answer.value = "";
 
   if (mode === "symbol") {
@@ -324,25 +323,31 @@ function showNext() {
   answer.focus();
 }
 
+function normalizeLatex(value) {
+  return value.replace(/\s+/g, "");
+}
+
+function isCorrect(input, item) {
+  if (mode === "symbol") {
+    return input === item;
+  }
+
+  if (item.type === "math") {
+    return normalizeLatex(input) === normalizeLatex(item.answer);
+  }
+
+  return input === item.answer;
+}
+
 function setMode(newMode) {
   mode = newMode;
-
   symbolMode.classList.toggle("active", mode === "symbol");
   practicalMode.classList.toggle("active", mode === "practical");
-
   start();
 }
 
 answer.addEventListener("input", () => {
-  if (answer.value === deck[index].answer && mode === "practical") {
-    completed++;
-    totalCompleted++;
-    index++;
-    showNext();
-    return;
-  }
-
-  if (mode === "symbol" && answer.value === deck[index]) {
+  if (isCorrect(answer.value, deck[index])) {
     completed++;
     totalCompleted++;
     index++;
